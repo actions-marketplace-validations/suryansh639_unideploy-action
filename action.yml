@@ -70,6 +70,23 @@ runs:
         export PATH="$HOME/.local/bin:$PATH"
         unideploy auth login --api-key "$UNIDEPLOY_API_KEY"
         unideploy auth login --provider "${{ inputs.provider }}" --region "${{ inputs.region }}"
+
+        # Ensure a valid model is set in config so BOTH the prompt path and the
+        # playbook path work (a bare bedrock login has no valid default model).
+        MODEL_TO_SET="${{ inputs.model }}"
+        if [ -z "$MODEL_TO_SET" ] && [ "${{ inputs.provider }}" = "amazon-bedrock" ]; then
+          MODEL_TO_SET="amazon-bedrock/amazon.nova-pro-v1:0"
+        fi
+        if [ -n "$MODEL_TO_SET" ]; then
+          CFG="$HOME/.Unideploy/config.toml"
+          if grep -q '^model = ' "$CFG"; then
+            sed -i "s|^model = .*|model = \"$MODEL_TO_SET\"|" "$CFG"
+          else
+            sed -i "/^\[profiles.default\]/a model = \"$MODEL_TO_SET\"" "$CFG"
+          fi
+          echo "Model set to: $MODEL_TO_SET"
+        fi
+
         unideploy version
         echo "::endgroup::"
 
@@ -82,6 +99,10 @@ runs:
         MODEL_ARG=""
         if [ -n "${{ inputs.model }}" ]; then
           MODEL_ARG="--model ${{ inputs.model }}"
+        elif [ "${{ inputs.provider }}" = "amazon-bedrock" ]; then
+          # Default to a widely-available Bedrock model so fresh CI runs work
+          # out of the box (a bare bedrock login has no valid default model).
+          MODEL_ARG="--model amazon-bedrock/amazon.nova-pro-v1:0"
         fi
 
         OUTPUT_FILE="$(mktemp)"
