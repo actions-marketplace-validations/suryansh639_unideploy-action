@@ -1,5 +1,5 @@
 name: "UniDeploy AI DevOps Agent"
-description: "Run UniDeploy — an AI DevOps agent — in CI/CD. Auto-diagnose failures, audit AWS/Azure/GCP infra, and post fixes as PR comments."
+description: "AI DevOps agent for CI/CD — diagnose failures, audit AWS/Azure/GCP, post fixes as PR comments."
 author: "UniDeploy"
 
 branding:
